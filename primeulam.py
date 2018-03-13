@@ -1,9 +1,10 @@
 from graphics import *
+import argparse
 
-UP = "up"
-LEFT = "left"
-DOWN = "down"
-RIGHT = "right"
+UP = 0
+LEFT = 1
+DOWN = 2
+RIGHT = 3
 
 next_movement = {
             UP: LEFT,
@@ -35,13 +36,12 @@ def update(curr_movement, x, y):
 
 def spiralize(board):
     size = len(board)
-    center = size // 2
-    x, y = center, center
+    x, y = size // 2, size // 2
     num = 1
     board[x][y] = num
     y += 1
     num += 1
-    movement = "up"
+    movement = UP
     while in_bounds(x, y, size):
         if neighbor(movement, x, y, board) is not None:
             board[x][y] = num
@@ -50,38 +50,53 @@ def spiralize(board):
         else:
             movement = next_movement[movement]
 
-# Thanks to "dawg" from stackoverflow
-def is_prime(n):
-  if n == 2 or n == 3: return True
-  if n < 2 or n%2 == 0: return False
-  if n < 9: return True
-  if n%3 == 0: return False
-  r = int(n**0.5)
-  f = 5
-  while f <= r:
-    if n%f == 0: return False
-    if n%(f+2) == 0: return False
-    f +=6
-  return True   
+# Adapted from "Pi Delport" on stackoverflow
+def primes_sieve(limit):
+    a = [True] * limit
+    a[0] = a[1] = False
+    ans = set()
+    for (i, isprime) in enumerate(a):
+        if isprime:
+            ans.add(i)
+            for n in range(i*i, limit, i):
+                a[n] = False 
+    return ans
 
-if len(sys.argv) < 2:
-    raise Exception("Please enter the spiral size")
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument("-size", type=int, default=201)
+parser.add_argument("-bg", type=str, default="blue")
+parser.add_argument("-color", type=str, default="red")
+parser.add_argument("-radius", type=int, default=1)
 
-size = int(sys.argv[1])
+args = parser.parse_args()
 
-if size % 2 != 1:
-    raise Exception("Please enter a odd number")
+if args.size % 2 != 1:
+    raise Exception("please ensure size is odd.")
 
-board = [[None for i in range(size)] for j in range(size)]
+multiplier = 2 * args.radius
 
+primes = primes_sieve(args.size ** 2)
+
+board = [[None for i in range(args.size)] for j in range(args.size)]
 spiralize(board)
-win = GraphWin("Prime Ulam Spiral (size {}) ".format(size), size, size)
-win.setBackground("black")
+
+win = GraphWin("Prime Ulam Spiral (size {}) ".format(args.size),
+                args.size * multiplier,
+                args.size * multiplier,
+                autoflush=False)
+win.setBackground(args.bg)
 
 for i in range(len(board)):
     for j in range(len(board)):
-        if is_prime(board[i][j]):
-            win.plot(i, j, "white")
+        if board[i][j] in primes:
+            c = Circle(Point(i* multiplier, j * multiplier), args.radius)
+            c.setFill(args.color)
+            c.setOutline(args.color)
+            c.draw(win)
+
+# To force instant drawing
+for i in range(1):
+    update(0,0,1)
 
 win.getMouse()
 win.close()
