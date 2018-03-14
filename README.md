@@ -8,8 +8,9 @@ For example, "python primeulam.py" will display:
 
 You can also customize it by color, background color, circle radius,
 and size.
-e.g. "python primeulam.py -radius 4 -color white -bg black -size 101"
-will diplay:
+e.g.
+"python primeulam.py -radius 4 -color white -bg black -size 101"
+will display:
 
 ![custom example](/custom_example.png "custom example")
 
