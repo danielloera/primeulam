@@ -36,7 +36,7 @@ def neighbor(curr_movement, x, y, board):
         return board[x][y + 1]
     return board[x - 1][y]
 
-def update(curr_movement, x, y):
+def move(curr_movement, x, y):
     if curr_movement == UP:
         return x - 1, y
     if curr_movement == LEFT:
@@ -49,13 +49,13 @@ def spiralize(board, num):
     size = len(board)
     x, y = size // 2, size // 2
     board[x][y] = num
-    y += 1
+    movement = RIGHT
+    x, y = move(movement, x, y)
     num += 1
-    movement = UP
     while x >= 0 and x < size and y >= 0 and y < size:
         if neighbor(movement, x, y, board) is not None:
             board[x][y] = num
-            x, y = update(movement, x, y)
+            x, y = move(movement, x, y)
             num += 1
         else:
             movement = next_movement[movement]
@@ -80,7 +80,6 @@ def get_shape(x, y, multiplier, shape, shape_size):
         return Rectangle(
                 Point(x - shape_size, y - shape_size),
                 Point(x + shape_size, y + shape_size))
-    half_size = shape_size // 2
     return Polygon(
             Point(x, y),
             Point(x - multiplier, y + multiplier),
@@ -88,7 +87,6 @@ def get_shape(x, y, multiplier, shape, shape_size):
 
 
 def main():
-
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-size", type=int, default=201)
     parser.add_argument("-bg", type=str, default="blue")
@@ -102,36 +100,52 @@ def main():
     if args.size % 2 != 1:
         raise Exception("please ensure size is odd.")
 
+    # Scale board based on shape size
     multiplier = 2 * args.shape_size
+    # Convert shape str into int for faster shape evaluation
     shape = shape_convert[args.shape]
+    final_size = int(args.size * multiplier)
 
-    primes = primes_sieve(args.size ** 2)
+    primes = primes_sieve((args.size + args.start) ** 2)
 
     board = [[None for i in range(args.size)] for j in range(args.size)]
     spiralize(board, args.start)
 
     win = GraphWin("Prime Ulam Spiral (size {}) ".format(args.size),
-                    args.size * multiplier,
-                    args.size * multiplier,
+                    final_size,
+                    final_size,
                     autoflush=False)
-    win.setBackground(args.bg)
+    
+    # Explicitly draw background so that it
+    # Will properly save to file :)
+    bg = Rectangle(
+            Point(0, 0),
+            Point(final_size, final_size))
+    bg.setOutline(args.bg)
+    bg.setFill(args.bg)
+    bg.draw(win)
 
-    for i in range(len(board)):
-        for j in range(len(board)):
-            if board[i][j] in primes:
-                s = get_shape(i, j,
-                                multiplier,
-                                shape,
-                                args.shape_size)
+    for x in range(len(board)):
+        for y in range(len(board)):
+            if board[x][y] in primes:
+                s = get_shape(
+                        x, y,
+                        multiplier,
+                        shape,
+                        args.shape_size)
                 s.setFill(args.color)
                 s.setOutline(args.color)
                 s.draw(win)
 
-    # force instant draw            
-    update(0,0,1)
-
     win.getMouse()
+    win.postscript(file="ulam.eps", colormode="color")
+    from PIL import Image as NewImage
+    img = NewImage.open("ulam.eps")
+    img.save("ulam.png", "png")
     win.close()
 
-if __name__ == '__main__':
+    print("Raw image saved to ulam.eps")
+    print("Actual size saved to ulam.png")
+
+if __name__ == "__main__":
     main()
