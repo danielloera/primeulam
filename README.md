@@ -1,5 +1,7 @@
 # primeulam
-Show the prime ulam spiral with some optional arguments.
+Show the prime ulam spiral with some optional arguments. </br></br>
+The raw spiral will be saved to ulam.eps and </br>
+the actual pixel size will be saved to elam.png :)
 
 For example, "python primeulam.py" will display:
 
